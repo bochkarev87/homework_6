@@ -77,6 +77,20 @@
   engagement. A user-level online experiment is required before rollout.
 </div>
 
+<h3>1.1 Requirement coverage</h3>
+<table class="avoid">
+  <tr><th>Assignment requirement</th><th>Where it is addressed</th></tr>
+  <tr><td>User–movie graph from training ratings <code>&gt;= 4.0</code>; missing ratings unobserved</td><td>Section 3; <code>graph.js</code></td></tr>
+  <tr><td>Global PageRank and user-seeded PPR with TensorFlow.js; alpha is the link-following probability</td><td>Section 4.1; <code>graph.js</code></td></tr>
+  <tr><td>Transition normalization, probability conservation, convergence and zero-degree handling</td><td>Section 4.3; <code>verification.json</code></td></tr>
+  <tr><td>Alpha selected by validation Recall@10, never by test outcomes</td><td>Section 5.1; <code>results.csv</code></td></tr>
+  <tr><td>Popularity, global PageRank, PPR and MF compared on the same eligible users and candidate movies</td><td>Section 5; 861-user shared cohort</td></tr>
+  <tr><td>Validation excludes training ratings; test excludes training and validation ratings</td><td>Section 3; Section 5</td></tr>
+  <tr><td>Test Top-10 lists for the same two users with titles, genres and scores</td><td>Sections 6.2–6.3; <code>recommendations.csv</code></td></tr>
+  <tr><td>One-factor-at-a-time demo: users A/B at alpha 0.85, then user A at 0.85 versus 0.50</td><td>Section 6</td></tr>
+  <tr><td>Report test Recall@10, exclusions and training popularity; PPR scores are not ratings or purchase probabilities</td><td>Section 5; Section 6.2; Section 8</td></tr>
+</table>
+
 <h2 class="page-break">2. Related work</h2>
 <p>
   This project combines link analysis, personalized search and latent-factor collaborative
@@ -269,7 +283,7 @@
   global PageRank and PPR, as required, so this is not evidence that PageRank was optimized.
 </p>
 
-<h3>4.1 Alpha selection on validation only</h3>
+<h3>5.1 Alpha selection on validation only</h3>
 <table class="avoid">
   <tr><th class="num">Alpha</th><th class="num">Validation Recall@10</th><th class="num">Validation cohort</th></tr>
   <tr><td class="num">0.50</td><td class="num"><strong>0.1145</strong></td><td class="num">846</td></tr>
@@ -304,7 +318,7 @@
   4/10 for MF.
 </p>
 
-<h3>5.1 Training histories</h3>
+<h3>6.1 Training histories</h3>
 <table class="avoid">
   <tr><th>User</th><th class="num">Train / val / test</th><th class="num">Positive train</th><th>Top positive-training genres</th></tr>
   <tr><td>1</td><td class="num">217 / 27 / 28</td><td class="num">131</td><td>Drama 61, Comedy 39, Action 36, Sci-Fi 27, Thriller 25</td></tr>
@@ -317,7 +331,7 @@
   <em>Rosewood</em> and <em>Hoodlum</em>.
 </p>
 
-<h3>5.2 PPR Top-10 at the selected alpha (0.50)</h3>
+<h3>6.2 PPR Top-10 at the selected alpha (0.50)</h3>
 <table class="avoid">
   <tr><th class="num">Rank</th><th>User 1: movie</th><th>Genres</th><th class="num">Pop.</th><th>User 2: movie</th><th>Genres</th><th class="num">Pop.</th></tr>
   <tr><td class="num">1</td><td>Fargo (1996)</td><td>Crime; Drama; Thriller</td><td class="num">377</td><td>Return of the Jedi (1983)</td><td>Action; Adventure; Romance; Sci-Fi; War</td><td class="num">339</td></tr>
@@ -337,7 +351,7 @@
   are in <code>recommendations.csv</code>.
 </p>
 
-<h3>5.3 MF Top-10 (checkpoint 4)</h3>
+<h3>6.3 MF Top-10 (checkpoint 4)</h3>
 <table class="avoid">
   <tr><th class="num">Rank</th><th>User 1: movie</th><th>Genres</th><th class="num">Pop.</th><th>User 2: movie</th><th>Genres</th><th class="num">Pop.</th></tr>
   <tr><td class="num">1</td><td>The Wrong Trousers (1993)</td><td>Animation; Comedy</td><td class="num">90</td><td>Persuasion (1995)</td><td>Romance</td><td class="num">28</td></tr>

@@ -41,6 +41,14 @@
   .kpi .l { font-size: 8pt; color: #536777; text-transform: uppercase; letter-spacing: 0.4pt; }
   code { font-family: Consolas, "Courier New", monospace; font-size: 8.6pt; background: #f2f4f6; padding: 0 2pt; overflow-wrap: anywhere; }
   .refs p { margin-bottom: 4pt; padding-left: 14pt; text-indent: -14pt; }
+  figure { margin: 8pt 0 10pt; page-break-inside: avoid; }
+  figure img { display: block; width: 100%; height: auto; max-height: 82mm; object-fit: contain; border: 0.6pt solid #b8c8d6; background: #fff; }
+  figcaption { font-size: 8.1pt; color: #4b5c6b; line-height: 1.3; margin-top: 3pt; }
+  .evidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9pt; margin: 7pt 0 9pt; }
+  .evidence-grid figure { margin: 0; }
+  .evidence-grid figure img { max-height: 62mm; }
+  .evidence-note { font-size: 8.4pt; color: #4b5c6b; }
+  figure.portrait img { width: auto; max-width: 100%; max-height: 108mm; margin: 0 auto; }
 </style>
 </head>
 <body>
@@ -130,6 +138,41 @@
   contribution is a reproducible browser harness that compares four ranking signals under one
   cohort, an exact batched PPR implementation validated against a single-seed reference, and a
   disclosed correction to the starter MF regularizer.
+</p>
+
+<h3>2.1 Ideas from the sources that shaped my solution</h3>
+<p>
+  I did not use the sources only as background citations. Each one supplied a specific idea that
+  helped me make a design decision or interpret a result.
+</p>
+<ul>
+  <li><strong>Brin and Page (1998).</strong> The useful idea was that node importance can be defined
+    recursively by the importance of nodes that point to it. I used that idea to build the global
+    PageRank baseline, but I kept it as a graph-smoothed popularity signal rather than treating it
+    as personalized recommendation.</li>
+  <li><strong>Jeh and Widom (2003).</strong> The idea that helped most was replacing the uniform
+    restart in PageRank with a restart distribution concentrated on one seed. That is exactly the
+    problem in this assignment: global PageRank is not user-specific. I implemented PPR with a
+    one-hot restart at the target user, then batched the same propagation over the evaluation
+    cohort.</li>
+  <li><strong>Koren, Bell and Volinsky (2009).</strong> The latent-factor idea explained why MF
+    produces a predicted-rating shelf rather than a graph-proximity ranking. I reused the learned
+    user and movie factors and the global training mean, and I kept the MF score on its own scale
+    instead of comparing it numerically with PPR probabilities.</li>
+  <li><strong>Rendle et al. (2009).</strong> The BPR idea of optimizing a pairwise ordering helped me
+    interpret the MF gap: an RMSE-trained model is optimized for rating prediction, not for
+    retrieving relevant movies into a Top-10. I therefore treated MF as a rating-oriented baseline,
+    not as a like-for-like ranking competitor.</li>
+  <li><strong>Harper and Konstan (2015).</strong> The dataset description clarified that MovieLens
+    100K contains explicit ratings and rating timestamps rather than viewing sessions. That shaped
+    the warm-user evaluation, the chronological split and the caution that a missing rating is
+    unobserved data, not a zero preference.</li>
+</ul>
+<p>
+  The combination is the core of my method: PageRank supplies the propagation rule, personalized
+  restart supplies user conditioning, MF supplies a rating-oriented reference point, BPR explains
+  the ranking-objective mismatch, and the MovieLens description defines what the data can and
+  cannot support.
 </p>
 
 <h2>3. Data, graph and evaluation population</h2>
@@ -254,7 +297,8 @@
   <code>[0.37252694, 0.19582376, 0.39414933, 0.03750000]</code> in 28 iterations with residual
   <code>9.54e-7</code>, within <code>1.6e-7</code> of the supplied reference vector and below the
   <code>1e-6</code> tolerance. This is the requested hand-computed check: it verifies one
-  propagation step and the fixed point, not the full 861-user evaluation.
+  propagation step, not the full 861-user evaluation. The fixed point is reported by the code but
+  was not re-derived by hand.
 </p>
 
 <h2 class="page-break">5. Retrieval results</h2>
@@ -468,8 +512,8 @@
 <p>
   These observations match the settings and control flow recorded in the checked-in artifacts. The
   numerical tables in this report come from those exports; the hand calculation in section 4.4
-  independently checks one propagation step and the fixed point. Alpha was selected on validation,
-  not tuned on the test split.
+  independently checks one propagation step. Alpha was selected on validation, not tuned on the
+  test split.
 </p>
 <p>
   <strong>What this work gave me.</strong> The main result is not that PPR is newer or automatically
@@ -480,6 +524,152 @@
   not share a score scale: one predicts ratings, while the other ranks graph proximity. Finally, the
   offline numbers justify a hypothesis, not a rollout; the proposed A/B test is the next step before
   claiming engagement gains.
+</p>
+
+<h2 class="page-break">11. Execution log and evidence trail</h2>
+<p>
+  This section records the order in which I ran the submitted application and the evidence I
+  inspected. It is deliberately separate from the results: Section 5 reports what the numbers are,
+  while this section shows how I produced and checked them. The screenshots below were captured
+  during the run; the numeric tables were then cross-checked against the exported CSV and JSON
+  files.
+</p>
+
+<h3>11.1 Step-by-step record</h3>
+<table class="avoid">
+  <tr><th class="num">#</th><th>What I did</th><th>What I observed</th><th>Evidence</th></tr>
+  <tr>
+    <td class="num">1</td>
+    <td>Selected the coding model in OpenCode and started the session.</td>
+    <td>DeepSeek V4.1 Flash was selected; the first screenshot is timestamped 15:03.</td>
+    <td>Fig. 1; <code>session.json</code></td>
+  </tr>
+  <tr>
+    <td class="num">2</td>
+    <td>Started the local HTTP server from <code>week6/</code> and opened
+      <code>http://localhost:8000/index.html</code>.</td>
+    <td>The page loaded the MovieLens files and reported the TensorFlow.js <code>webgl</code>
+      backend; the dataset summary is visible in Fig. 4.</td>
+    <td>Fig. 4; Section 9</td>
+  </tr>
+  <tr>
+    <td class="num">3</td>
+    <td>Pressed <strong>Build graph</strong>.</td>
+    <td>943 user nodes, 1,611 movie nodes, 2,554 total nodes, 45,602 positive training edges,
+      1 zero-degree user and 253 zero-degree movies.</td>
+    <td>Figs. 2–4</td>
+  </tr>
+  <tr>
+    <td class="num">4</td>
+    <td>Pressed <strong>Run tests</strong>.</td>
+    <td>The status line reported 12 passed, 0 failed and 0 pending; the individual checks are
+      recorded in <code>verification.json</code>.</td>
+    <td>Fig. 4; <code>verification.json</code></td>
+  </tr>
+  <tr>
+    <td class="num">5</td>
+    <td>Pressed <strong>Run alpha sweep (validation)</strong>.</td>
+    <td>The sweep completed and the UI reported selected alpha 0.50. The four validation points
+      are 0.1145, 0.1048, 0.0900 and 0.0738 for alpha 0.50, 0.70, 0.85 and 0.95.</td>
+    <td>Fig. 5; <code>results.csv</code></td>
+  </tr>
+  <tr>
+    <td class="num">6</td>
+    <td>Pressed <strong>Evaluate Recall@10 — all four methods</strong>.</td>
+    <td>The shared TEST cohort contained 861 users; PPR reached Recall@10 0.1122, above global
+      PageRank 0.0797, popularity 0.0760 and MF 0.0312.</td>
+    <td><code>results.csv</code>; Section 5</td>
+  </tr>
+  <tr>
+    <td class="num">7</td>
+    <td>Pressed <strong>Run two-user demo (alpha / seed)</strong>.</td>
+    <td>Changing only the restart user gave 0/10 shared titles; changing only alpha from 0.85 to
+      0.50 gave 7/10 shared titles.</td>
+    <td>Section 6; <code>recommendations.csv</code></td>
+  </tr>
+  <tr>
+    <td class="num">8</td>
+    <td>Inspected the PPR and MF Top-10 lists for Users 1 and 2.</td>
+    <td>The lists contained titles, genres, scores and training popularity; the two methods
+      produced different recommendation intents.</td>
+    <td>Section 6.2–6.3; <code>recommendations.csv</code></td>
+  </tr>
+  <tr>
+    <td class="num">9</td>
+    <td>Worked one PageRank update by hand on the four-node reference graph.</td>
+    <td>I wrote the transition matrix, the initial vector, the incoming masses, the restart term,
+      and obtained <code>p1 = [0.25, 0.14375, 0.56875, 0.0375]</code>; the values sum to 1.</td>
+    <td>Section 4.4; Fig. 6</td>
+  </tr>
+  <tr>
+    <td class="num">10</td>
+    <td>Exported and compared the machine-readable artifacts, then recorded the session.</td>
+    <td><code>verification.json</code>, <code>results.csv</code> and
+      <code>recommendations.csv</code> matched the values used in the report; the final
+      <code>session.json</code> is the audit trail.</td>
+    <td>Section 9; submission files</td>
+  </tr>
+</table>
+
+<p class="evidence-note">
+  <strong>Note on alpha 0.55.</strong> Two screenshots show the slider at 0.55. That was an
+  intermediate manual position used while inspecting the graph view before the validation sweep;
+  it is not a reported result. The selected value used in the evaluation is 0.50.
+</p>
+
+<h3>11.2 Screenshots from the run</h3>
+<div class="evidence-grid">
+  <figure>
+    <img src="evidence/01_opencode_model.png" alt="OpenCode model selection">
+    <figcaption><strong>Fig. 1.</strong> OpenCode model selection at 15:03. I used DeepSeek V4.1
+      Flash through OpenCode for the assisted implementation.</figcaption>
+  </figure>
+  <figure>
+    <img src="evidence/02_graph_summary_alpha085.png" alt="Graph summary after Build graph">
+    <figcaption><strong>Fig. 2.</strong> Graph summary after Build graph: 943 user nodes, 1,611
+      movie nodes, 2,554 total nodes and 45,602 positive training edges. The controls show User 1
+      and restart User 2 at alpha 0.85.</figcaption>
+  </figure>
+</div>
+
+<figure>
+  <img src="evidence/03_graph_view_alpha055.png" alt="Graph view with ego subgraph">
+  <figcaption><strong>Fig. 3.</strong> Graph view at 17:58. The ego subgraph is rendered for the
+    selected seed. Alpha 0.55 is an intermediate manual setting, not the selected value.</figcaption>
+</figure>
+
+<div class="evidence-grid">
+  <figure>
+    <img src="evidence/04_dataset_alpha055.png" alt="Dataset and graph summaries">
+    <figcaption><strong>Fig. 4.</strong> Dataset and graph summaries at 18:35 with the
+      TensorFlow.js <code>webgl</code> backend: 100,000 ratings, split 79,619 / 9,596 / 10,785,
+      and 45,602 positive training interactions. The status line reports 12 passed, 0 failed and
+      0 pending.</figcaption>
+  </figure>
+  <figure>
+    <img src="evidence/05_alpha_sweep_alpha050.png" alt="Validation alpha sweep result">
+    <figcaption><strong>Fig. 5.</strong> Validation alpha sweep at 18:35. The status line reports
+      selected alpha 0.50; this is the value used in the four-method evaluation.</figcaption>
+  </figure>
+</div>
+
+<figure class="portrait">
+  <img src="evidence/06_handwritten_pagerank.jpg" alt="Handwritten one-step PageRank calculation">
+  <figcaption><strong>Fig. 6.</strong> My handwritten one-step PageRank check on the four-node
+    reference graph. The sheet records the edges, the transition matrix, the initial vector
+    <code>p0 = [0.25, 0.25, 0.25, 0.25]</code>, the restart value <code>r = 0.0375</code>, the
+    incoming masses and the result <code>p1 = [0.25, 0.14375, 0.56875, 0.0375]</code>, followed by
+    the sum check. This verifies one propagation step, not the fixed point.</figcaption>
+</figure>
+
+<h3>11.3 What this evidence establishes</h3>
+<p>
+  The screenshots show the application actually running, the graph being built, the test summary,
+  the validation sweep and the selected alpha. The exported files then connect those UI states to
+  the numerical tables in Sections 5 and 6. The handwritten PageRank calculation in Section 4.4 is
+  the independent arithmetic check; the browser re-run in Section 10 is the independent execution
+  check. Together they show a traceable path from the source code to the reported numbers, rather
+  than only a final result.
 </p>
 
 <h2>References</h2>

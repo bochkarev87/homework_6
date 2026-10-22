@@ -1,5 +1,7 @@
 # HW6 — Graph-Based Recommendations with Personalized PageRank
 
+**Author:** Ilya Bochkarev
+
 Submission for the LLM4Rec course assignment. The original assignment text is
 preserved in [`assignment.md`](assignment.md); this file documents the submitted
 implementation and how to reproduce its outputs.
@@ -204,8 +206,8 @@ the expected vector.
 
 ## Manual steps before submission
 
-1. Add your name and student details to the title block of
-   `report.html`, then regenerate `report.pdf`, if the course requires them.
+1. Add a student ID or group number to the title block of `report.html` if the
+   course requires them, then regenerate `report.pdf`.
 2. Confirm the submission directory, deadline, report format and AI-session
    export requirement with the instructor. Do not rely on this repository for
    those administrative details.

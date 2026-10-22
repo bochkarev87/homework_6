@@ -430,6 +430,36 @@
   <code>verification.json</code>, <code>results.csv</code> and <code>recommendations.csv</code>.
 </p>
 
+<h2>10. Independent verification and author's reflection</h2>
+<p>
+  <strong>Verification statement.</strong> I, Ilya Bochkarev, independently launched the submitted
+  application from <code>week6/</code> with <code>py -m http.server 8000</code> and repeated the
+  documented workflow in Chrome on 22 October 2026.
+</p>
+<ul>
+  <li>Build graph reported 2,554 nodes and 45,602 positive training edges.</li>
+  <li>Self-checks reported 12 passed, 0 failed and 0 pending.</li>
+  <li>The validation alpha sweep selected alpha 0.50.</li>
+  <li>Evaluation completed with the same selected alpha.</li>
+  <li>The two-user demonstration completed for users 1 and 2 with one factor changed per comparison.</li>
+</ul>
+<p>
+  These observations match the settings and control flow recorded in the checked-in artifacts. The
+  numerical tables in this report come from those exports; the hand calculation in section 4.4
+  independently checks one propagation step and the fixed point. Alpha was selected on validation,
+  not tuned on the test split.
+</p>
+<p>
+  <strong>What this work gave me.</strong> The main result is not that PPR is newer or automatically
+  better. It is that a graph method can be compared with two baselines and a previous model under one
+  shared cohort, and that the comparison can support a specific deployment choice. I now understand
+  alpha as an exploration–restart trade-off rather than a quality knob: it has to be selected on
+  validation, and a larger value is not automatically better. I also understand why MF and PPR should
+  not share a score scale: one predicts ratings, while the other ranks graph proximity. Finally, the
+  offline numbers justify a hypothesis, not a rollout; the proposed A/B test is the next step before
+  claiming engagement gains.
+</p>
+
 <h2>References</h2>
 <div class="refs">
   <p>Brin, S., and Page, L. 1998. The Anatomy of a Large-Scale Hypertextual Web Search Engine.

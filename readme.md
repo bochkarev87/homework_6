@@ -190,7 +190,7 @@ orientation, Top-10 filtering/ties, node mapping and the public API. It also
 records the batched-vs-single PPR cross-check, MF settings, backend, dependency
 versions and single-run timings. The report also documents a hand-computed
 one-step PageRank check on the four-node fixture, with the console command and
-the expected vector.
+the expected vector, plus the author's independent browser re-run in section 10.
 
 ## Limitations
 

@@ -1,0 +1,101 @@
+user_id,method,alpha,rank,movie_id,title,genres,score,training_popularity
+1,ppr,0.85,1,100,Fargo (1996),Crime;Drama;Thriller,0.0027416804805397987,377
+1,ppr,0.85,2,258,Contact (1997),Drama;Sci-Fi,0.0020019595976918936,307
+1,ppr,0.85,3,286,"English Patient, The (1996)",Drama;Romance;War,0.0018735366174951196,279
+1,ppr,0.85,4,318,Schindler's List (1993),Drama;War,0.0016319346614181995,224
+1,ppr,0.85,5,357,One Flew Over the Cuckoo's Nest (1975),Drama,0.0014931046171113849,202
+1,ppr,0.85,6,483,Casablanca (1942),Drama;Romance;War,0.0014446355635300279,197
+1,ppr,0.85,7,288,Scream (1996),Horror;Thriller,0.0014287256635725498,226
+1,ppr,0.85,8,300,Air Force One (1997),Action;Thriller,0.001413104822859168,235
+1,ppr,0.85,9,222,Star Trek: First Contact (1996),Action;Adventure;Sci-Fi,0.0013529466232284904,189
+1,ppr,0.85,10,313,Titanic (1997),Action;Drama;Romance,0.0013183323899284005,219
+2,ppr,0.85,1,181,Return of the Jedi (1983),Action;Adventure;Romance;Sci-Fi;War,0.002600747160613537,339
+2,ppr,0.85,2,98,"Silence of the Lambs, The (1991)",Drama;Thriller,0.0020272948313504457,308
+2,ppr,0.85,3,174,Raiders of the Lost Ark (1981),Action;Adventure,0.0019665746949613094,312
+2,ppr,0.85,4,7,Twelve Monkeys (1995),Drama;Sci-Fi,0.001790291746146977,234
+2,ppr,0.85,5,56,Pulp Fiction (1994),Crime;Drama,0.0017448182916268706,263
+2,ppr,0.85,6,117,"Rock, The (1996)",Action;Adventure;Thriller,0.0016845915233716369,215
+2,ppr,0.85,7,172,"Empire Strikes Back, The (1980)",Action;Adventure;Drama;Romance;Sci-Fi;War,0.0016606259159743786,261
+2,ppr,0.85,8,9,Dead Man Walking (1995),Drama,0.001607950427569449,182
+2,ppr,0.85,9,121,Independence Day (ID4) (1996),Action;Sci-Fi;War,0.0016027545789256692,207
+2,ppr,0.85,10,64,"Shawshank Redemption, The (1994)",Drama,0.0015171784907579422,228
+1,ppr,0.50,1,100,Fargo (1996),Crime;Drama;Thriller,0.0006855192477814853,377
+1,ppr,0.50,2,258,Contact (1997),Drama;Sci-Fi,0.00043986583477817476,307
+1,ppr,0.50,3,286,"English Patient, The (1996)",Drama;Romance;War,0.0004310184740461409,279
+1,ppr,0.50,4,318,Schindler's List (1993),Drama;War,0.0004038167535327375,224
+1,ppr,0.50,5,357,One Flew Over the Cuckoo's Nest (1975),Drama,0.0003771662595681846,202
+1,ppr,0.50,6,483,Casablanca (1942),Drama;Romance;War,0.00035968932206742465,197
+1,ppr,0.50,7,222,Star Trek: First Contact (1996),Action;Adventure;Sci-Fi,0.000332785421051085,189
+1,ppr,0.50,8,475,Trainspotting (1996),Drama,0.00032809015829116106,164
+1,ppr,0.50,9,275,Sense and Sensibility (1995),Drama;Romance,0.00032018497586250305,178
+1,ppr,0.50,10,423,E.T. the Extra-Terrestrial (1982),Children's;Drama;Fantasy;Sci-Fi,0.0003056683053728193,167
+1,popularity,,1,100,Fargo (1996),Crime;Drama;Thriller,377,377
+1,popularity,,2,258,Contact (1997),Drama;Sci-Fi,307,307
+1,popularity,,3,286,"English Patient, The (1996)",Drama;Romance;War,279,279
+1,popularity,,4,300,Air Force One (1997),Action;Thriller,235,235
+1,popularity,,5,288,Scream (1996),Horror;Thriller,226,226
+1,popularity,,6,318,Schindler's List (1993),Drama;War,224,224
+1,popularity,,7,313,Titanic (1997),Action;Drama;Romance,219,219
+1,popularity,,8,302,L.A. Confidential (1997),Crime;Film-Noir;Mystery;Thriller,202,202
+1,popularity,,9,357,One Flew Over the Cuckoo's Nest (1975),Drama,202,202
+1,popularity,,10,483,Casablanca (1942),Drama;Romance;War,197,197
+2,popularity,,1,181,Return of the Jedi (1983),Action;Adventure;Romance;Sci-Fi;War,339,339
+2,popularity,,2,174,Raiders of the Lost Ark (1981),Action;Adventure,312,312
+2,popularity,,3,98,"Silence of the Lambs, The (1991)",Drama;Thriller,308,308
+2,popularity,,4,56,Pulp Fiction (1994),Crime;Drama,263,263
+2,popularity,,5,172,"Empire Strikes Back, The (1980)",Action;Adventure;Drama;Romance;Sci-Fi;War,261,261
+2,popularity,,6,7,Twelve Monkeys (1995),Drama;Sci-Fi,234,234
+2,popularity,,7,79,"Fugitive, The (1993)",Action;Thriller,230,230
+2,popularity,,8,64,"Shawshank Redemption, The (1994)",Drama,228,228
+2,popularity,,9,318,Schindler's List (1993),Drama;War,224,224
+2,popularity,,10,173,"Princess Bride, The (1987)",Action;Adventure;Comedy;Romance,222,222
+1,pagerank,0.50,1,258,Contact (1997),Drama;Sci-Fi,0.0023751864209771156,307
+1,pagerank,0.50,2,286,"English Patient, The (1996)",Drama;Romance;War,0.002291252836585045,279
+1,pagerank,0.50,3,100,Fargo (1996),Crime;Drama;Thriller,0.002271695528179407,377
+1,pagerank,0.50,4,313,Titanic (1997),Action;Drama;Romance,0.002063426189124584,219
+1,pagerank,0.50,5,300,Air Force One (1997),Action;Thriller,0.0020034192129969597,235
+1,pagerank,0.50,6,288,Scream (1996),Horror;Thriller,0.0018683733651414514,226
+1,pagerank,0.50,7,302,L.A. Confidential (1997),Crime;Film-Noir;Mystery;Thriller,0.001798133715055883,202
+1,pagerank,0.50,8,294,Liar Liar (1997),Comedy,0.0014883464900776744,182
+1,pagerank,0.50,9,275,Sense and Sensibility (1995),Drama;Romance,0.0012158651370555162,178
+1,pagerank,0.50,10,222,Star Trek: First Contact (1996),Action;Adventure;Sci-Fi,0.0011928167659789324,189
+2,pagerank,0.50,1,181,Return of the Jedi (1983),Action;Adventure;Romance;Sci-Fi;War,0.0019889404065907,339
+2,pagerank,0.50,2,174,Raiders of the Lost Ark (1981),Action;Adventure,0.0015527261421084404,312
+2,pagerank,0.50,3,98,"Silence of the Lambs, The (1991)",Drama;Thriller,0.0015255436301231384,308
+2,pagerank,0.50,4,7,Twelve Monkeys (1995),Drama;Sci-Fi,0.001373774721287191,234
+2,pagerank,0.50,5,56,Pulp Fiction (1994),Crime;Drama,0.0013726184843108058,263
+2,pagerank,0.50,6,172,"Empire Strikes Back, The (1980)",Action;Adventure;Drama;Romance;Sci-Fi;War,0.0013182985130697489,261
+2,pagerank,0.50,7,117,"Rock, The (1996)",Action;Adventure;Thriller,0.0013080037897452712,215
+2,pagerank,0.50,8,121,Independence Day (ID4) (1996),Action;Sci-Fi;War,0.0012972891563549638,207
+2,pagerank,0.50,9,268,Chasing Amy (1997),Drama;Romance,0.0012656085891649127,146
+2,pagerank,0.50,10,222,Star Trek: First Contact (1996),Action;Adventure;Sci-Fi,0.0011928167659789324,189
+2,ppr,0.50,1,181,Return of the Jedi (1983),Action;Adventure;Romance;Sci-Fi;War,0.0006973370909690857,339
+2,ppr,0.50,2,9,Dead Man Walking (1995),Drama,0.0004976625787094235,182
+2,ppr,0.50,3,7,Twelve Monkeys (1995),Drama;Sci-Fi,0.00047437287867069244,234
+2,ppr,0.50,4,117,"Rock, The (1996)",Action;Adventure;Thriller,0.0004563604306895286,215
+2,ppr,0.50,5,98,"Silence of the Lambs, The (1991)",Drama;Thriller,0.0004465084057301283,308
+2,ppr,0.50,6,121,Independence Day (ID4) (1996),Action;Sci-Fi;War,0.00043071131221950054,207
+2,ppr,0.50,7,174,Raiders of the Lost Ark (1981),Action;Adventure,0.00040284922579303384,312
+2,ppr,0.50,8,268,Chasing Amy (1997),Drama;Romance,0.0004018101317342371,146
+2,ppr,0.50,9,475,Trainspotting (1996),Drama,0.0004016044840682298,164
+2,ppr,0.50,10,15,Mr. Holland's Opus (1995),Drama,0.0004009176336694509,160
+1,mf,,1,169,"Wrong Trousers, The (1993)",Animation;Comedy,5.244039535522461,90
+1,mf,,2,408,"Close Shave, A (1995)",Animation;Comedy;Thriller,5.073599338531494,85
+1,mf,,3,483,Casablanca (1942),Drama;Romance;War,4.976754188537598,197
+1,mf,,4,511,Lawrence of Arabia (1962),Adventure;War,4.914539337158203,134
+1,mf,,5,1449,Pather Panchali (1955),Drama,4.8251237869262695,7
+1,mf,,6,484,"Maltese Falcon, The (1941)",Film-Noir;Mystery,4.775870323181152,91
+1,mf,,7,1142,When We Were Kings (1996),Documentary,4.748240947723389,29
+1,mf,,8,603,Rear Window (1954),Mystery;Thriller,4.703402519226074,152
+1,mf,,9,1558,Aparajito (1956),Drama,4.68533182144165,4
+1,mf,,10,357,One Flew Over the Cuckoo's Nest (1975),Drama,4.670327663421631,202
+2,mf,,1,694,Persuasion (1995),Romance,4.697005748748779,28
+2,mf,,2,483,Casablanca (1942),Drama;Romance;War,4.615306377410889,197
+2,mf,,3,211,M*A*S*H (1970),Comedy;War,4.597038269042969,131
+2,mf,,4,647,Ran (1985),Drama;War,4.587276458740234,51
+2,mf,,5,59,Three Colors: Red (1994),Drama,4.572126388549805,56
+2,mf,,6,1449,Pather Panchali (1955),Drama,4.5565643310546875,7
+2,mf,,7,513,"Third Man, The (1949)",Mystery;Thriller,4.549496650695801,63
+2,mf,,8,511,Lawrence of Arabia (1962),Adventure;War,4.5296454429626465,134
+2,mf,,9,648,"Quiet Man, The (1952)",Comedy;Romance,4.522685527801514,41
+2,mf,,10,484,"Maltese Falcon, The (1941)",Film-Noir;Mystery,4.517760753631592,91

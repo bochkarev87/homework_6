@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HW6 Report - Graph-Based Recommendations with PPR</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 15mm 15mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: #17202a; background: #fff;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 10.2pt; line-height: 1.42;
+  }
+  h1 { font-size: 22pt; line-height: 1.1; margin: 0 0 6pt; color: #123b5d; }
+  h2 { font-size: 13.5pt; margin: 18pt 0 6pt; color: #123b5d; border-bottom: 1.2pt solid #c9d8e5; padding-bottom: 3pt; }
+  h3 { font-size: 11pt; margin: 12pt 0 4pt; color: #1d4e73; }
+  p { margin: 0 0 6pt; }
+  ul, ol { margin: 0 0 7pt 16pt; padding: 0; }
+  li { margin: 0 0 3pt; }
+  .title-block { border-top: 5pt solid #123b5d; padding-top: 12pt; margin-bottom: 14pt; }
+  .subtitle { font-size: 11.5pt; color: #3d566e; margin-bottom: 10pt; }
+  .meta { font-size: 9.2pt; color: #5a6b7b; }
+  .callout {
+    background: #eef5fa; border-left: 4pt solid #2b6a9b;
+    padding: 8pt 10pt; margin: 9pt 0 11pt;
+  }
+  .callout strong { color: #123b5d; }
+  table { width: 100%; border-collapse: collapse; margin: 5pt 0 9pt; font-size: 8.9pt; }
+  th, td { border: 0.6pt solid #b8c8d6; padding: 3.6pt 4.5pt; vertical-align: top; overflow-wrap: anywhere; word-break: break-word; }
+  th { background: #e8f0f7; color: #123b5d; text-align: left; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  tr:nth-child(even) td { background: #fbfcfd; }
+  .small { font-size: 8.3pt; color: #4b5c6b; }
+  .tag { display: inline-block; background: #dff0e4; color: #1d5d34; border: 0.6pt solid #9bc9aa; padding: 0 4pt; border-radius: 2pt; font-size: 8pt; }
+  .page-break { page-break-before: always; }
+  .avoid { page-break-inside: avoid; }
+  .two-col { display: flex; gap: 12pt; }
+  .two-col > div { flex: 1; }
+  .kpi { border: 0.8pt solid #b8c8d6; padding: 7pt; background: #f4f8fb; }
+  .kpi .v { font-size: 16pt; font-weight: 600; color: #123b5d; }
+  .kpi .l { font-size: 8pt; color: #536777; text-transform: uppercase; letter-spacing: 0.4pt; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 8.6pt; background: #f2f4f6; padding: 0 2pt; overflow-wrap: anywhere; }
+  .refs p { margin-bottom: 4pt; padding-left: 14pt; text-indent: -14pt; }
+</style>
+</head>
+<body>
+
+<div class="title-block">
+  <h1>Graph-Based Recommendations with Personalized PageRank</h1>
+  <div class="subtitle">Implementation evidence and a deployment decision for a MovieLens 100K recommender</div>
+  <div class="meta">LLM4Rec · HSE University · HW6 · 22 October 2026</div>
+</div>
+
+<h2>1. Executive summary</h2>
+<p>
+  I built the required user–movie graph from positive training interactions, implemented global
+  PageRank and seeded Personalized PageRank (PPR) with TensorFlow.js, and evaluated popularity,
+  global PageRank, PPR and matrix factorization (MF) on one shared test cohort. All seven assignment
+  stubs are implemented, all 12 self-checks pass, and every reported propagation run converged below
+  the L1 tolerance of <code>1e-6</code>.
+</p>
+
+<div class="two-col">
+  <div class="kpi"><div class="v">0.1122</div><div class="l">PPR Recall@10, test (861 users)</div></div>
+  <div class="kpi"><div class="v">0.0760</div><div class="l">Popularity Recall@10</div></div>
+  <div class="kpi"><div class="v">0.0312</div><div class="l">MF Recall@10 (checkpoint 4)</div></div>
+</div>
+
+<div class="callout">
+  <strong>Deployment recommendation: use both, in two different sections.</strong>
+  Keep MF for a predicted-rating shelf and use PPR for the main graph-based discovery row.
+  PPR retrieved held-out relevant movies more than three times as often as MF (Recall@10 11.22% vs
+  3.12%) and 47.6% more often than popularity, while MF produced much less popular lists
+  (mean training popularity 94.3 vs 244.2) and only 4 of 10 titles overlapped with PPR for the two
+  demonstration users. These are complementary offline signals, not proof that two rows will improve
+  engagement. A user-level online experiment is required before rollout.
+</div>
+
+<h2 class="page-break">2. Related work</h2>
+<p>
+  This project combines link analysis, personalized search and latent-factor collaborative
+  filtering. Brin and Page introduced PageRank as a global authority score for web pages
+  (Brin and Page 1998). Our global PageRank baseline applies the same fixed-point update to a
+  bipartite user–movie graph. Because a walk alternates between user and movie nodes, the global
+  stationary mass is driven by degree and connectivity rather than by one user's history; it is
+  therefore best read as a graph-smoothed popularity signal, not as a personalized recommender.
+</p>
+<p>
+  Jeh and Widom introduced personalized PageRank, which replaces the uniform restart with a
+  distribution concentrated on a seed (Jeh and Widom 2003). Our PPR uses the same random-walk
+  with restart, with a one-hot restart at the target user. We compute it exactly by batched power
+  iteration on the 2,554-node graph rather than by precomputed basis vectors or approximate
+  top-k propagation. The algorithmic contribution here is therefore an implementation and
+  evaluation study, not a new PPR variant: the batched path makes 861 user-specific runs
+  practical in the browser, and its output is checked against the single-seed implementation.
+</p>
+<p>
+  Matrix factorization represents users and movies by latent factors learned from observed
+  ratings (Koren, Bell and Volinsky 2009). Our MF follows the week-5 explicit-rating model: a
+  16-dimensional dot product plus the global training mean, trained with RMSE loss and Adam.
+  This differs from pairwise ranking objectives such as BPR, which optimize the order of
+  positive and negative items directly (Rendle et al. 2009). That objective mismatch is one
+  reason to expect weaker Recall@10 from an RMSE-trained model, and it is why the report treats
+  MF as a predicted-rating shelf rather than as a like-for-like ranking competitor.
+</p>
+<p>
+  MovieLens 100K is the standard benchmark used here (Harper and Konstan 2015). Published
+  MovieLens results are not directly comparable to our numbers because they use different
+  splits, candidate sets and ranking protocols. We therefore compare only methods trained and
+  evaluated inside this repository on the same 861-user cohort, and we report the exact
+  exclusion rules rather than matching a published leaderboard.
+</p>
+<p>
+  <strong>Positioning.</strong> The assignment is not a novel recommendation algorithm. Its
+  contribution is a reproducible browser harness that compares four ranking signals under one
+  cohort, an exact batched PPR implementation validated against a single-seed reference, and a
+  disclosed correction to the starter MF regularizer.
+</p>
+
+<h2>3. Data, graph and evaluation population</h2>
+<p>
+  The application loads the same MovieLens 100K files and the same per-user chronological
+  80/10/10 split as week 5. Missing ratings remain unobserved; they are never treated as zero
+  preferences. Only training ratings <code>&gt;= 4.0</code> create graph edges.
+</p>
+
+<table>
+  <tr><th>Quantity</th><th class="num">Value</th><th>Note</th></tr>
+  <tr><td>Ratings loaded</td><td class="num">100,000</td><td>MovieLens 100K</td></tr>
+  <tr><td>Movies loaded</td><td class="num">1,682</td><td><code>u.item</code></td></tr>
+  <tr><td>Train / validation / test records</td><td class="num">79,619 / 9,596 / 10,785</td><td>Chronological within user</td></tr>
+  <tr><td>Rating-matrix density</td><td class="num">6.30%</td><td>100,000 / (943 × 1,682)</td></tr>
+  <tr><td>User nodes / movie nodes</td><td class="num">943 / 1,611</td><td>Observed in the training split</td></tr>
+  <tr><td>Graph nodes / positive edges</td><td class="num">2,554 / 45,602</td><td>No padding node</td></tr>
+  <tr><td>Zero-degree users / movies</td><td class="num">1 / 253</td><td>Policy below</td></tr>
+  <tr><td>Training-movie candidate pool</td><td class="num">1,611</td><td>All training movies</td></tr>
+  <tr><td>Shared TEST cohort</td><td class="num">861</td><td>943 candidate users − 82 excluded</td></tr>
+  <tr><td>Validation cohort</td><td class="num">846</td><td>Used only for alpha selection</td></tr>
+</table>
+
+<p>
+  Thirteen relevant test movie IDs are absent from the training candidate pool:
+  <span class="small">913, 1106, 1130, 1458, 1498, 1525, 1613, 1625, 1645, 1646, 1650, 1651, 1674</span>.
+  Eighty-two users are excluded from the shared cohort because they have no eligible relevant test
+  movie after filtering (one user also has no positive training edge). The same 861 users are used
+  for all four methods; the alpha sweep uses the 846-user validation cohort and does not inspect
+  test outcomes.
+</p>
+
+<p>
+  The split is chronological within each user rather than globally time-consistent, and MovieLens
+  timestamps are rating times rather than viewing sessions. This is a warm-user evaluation; it says
+  nothing about cold start.
+</p>
+
+<h2>4. Implementation and verification</h2>
+
+<h3>4.1 Graph and propagation</h3>
+<p>
+  Users occupy node indices <code>0..nUsers−1</code> and movies follow, so no padding node enters the
+  graph or the candidate pool. For each positively rated training pair, the user row is normalized
+  over that user's positive movies and the movie row over the users who rated it positively. The
+  propagation uses the two off-diagonal blocks <code>R</code> and <code>R<sup>T</sup></code> rather than
+  materializing a dense 2,554 × 2,554 matrix.
+</p>
+<p>
+  Dangling mass is not discarded: zero-degree rows contribute their mass to the restart distribution
+  <code>v</code>, using the same rule in global PageRank and PPR. A run stops when the L1 difference
+  between consecutive distributions is below <code>1e-6</code>, or at 500 iterations; the iteration
+  cap is never treated as proof of convergence.
+</p>
+<p>
+  PPR for evaluation is computed once per <code>(graph, alpha, split)</code> for the whole cohort in a
+  single batched TensorFlow.js propagation, then reused for each user's Top-10. This keeps the main
+  propagation in tensor operations and avoids repeating a per-user walk 861 times. The batched path
+  was checked against the single-seed reference: at alpha 0.85 the two ran 94 and 91 iterations and
+  differed by at most <code>3.96e-9</code> in movie scores, which is float32 noise.
+</p>
+
+<h3>4.2 MF reference</h3>
+<p>
+  MF keeps the week-5 scoring definition: dot product of 16 learned factors plus the global training
+  mean, used as a predicted rating. It is not converted into a probability and its scores are never
+  compared numerically with PPR walk probabilities. Training uses Adam, learning rate 0.01,
+  regularization 0.05, batch size 512, 30 epochs and a fixed seed; the best validation-RMSE
+  checkpoint is epoch 4 with validation RMSE 0.9779.
+</p>
+<p>
+  <strong>Disclosed correction.</strong> The starter's L2 term summed over every factor row, which
+  collapsed all embeddings toward zero in the first epoch (validation RMSE stuck at 1.1830,
+  checkpoint 1). I replaced it with the week-5 per-batch mean objective,
+  <code>(sum(u²) + sum(i²)) × reg / batchSize</code>. This changes regularization only; the scoring
+  rule and the validation-checkpoint rule are unchanged.
+</p>
+
+<h3>4.3 Verification evidence</h3>
+<table>
+  <tr><th>Check group</th><th>Result</th><th>Evidence</th></tr>
+  <tr><td>Reference graph, uniform restart, alpha 0.85</td><td><span class="tag">PASS</span></td><td>Ranking C &gt; A &gt; B &gt; D, matches the provided fixture</td></tr>
+  <tr><td>Reference graph, restart at A, alpha 0.85</td><td><span class="tag">PASS</span></td><td>Ranking A &gt; C &gt; B &gt; D; D stays zero</td></tr>
+  <tr><td>Row normalization</td><td><span class="tag">PASS</span></td><td>Six positive-degree rows sum to 1; two dangling rows are zero</td></tr>
+  <tr><td>Restart distributions</td><td><span class="tag">PASS</span></td><td>Uniform and one-hot are nonnegative and sum to 1</td></tr>
+  <tr><td>Probability conservation</td><td><span class="tag">PASS</span></td><td>Total 1.00000027 after updates</td></tr>
+  <tr><td>Nonnegative stationary scores</td><td><span class="tag">PASS</span></td><td>All synthetic scores nonnegative</td></tr>
+  <tr><td>One extra update stability</td><td><span class="tag">PASS</span></td><td>L1 = 7.97e-7</td></tr>
+  <tr><td>Dangling-node fixture</td><td><span class="tag">PASS</span></td><td>Mass 1.00000028 / 1.00000000</td></tr>
+  <tr><td>Matrix orientation</td><td><span class="tag">PASS</span></td><td>Probability collects at the pointed-to node</td></tr>
+  <tr><td>Top-10 filtering and tie order</td><td><span class="tag">PASS</span></td><td>Previously rated items removed; ties by ascending movie ID</td></tr>
+  <tr><td>Graph mapping</td><td><span class="tag">PASS</span></td><td>2,554 = 943 users + 1,611 movies</td></tr>
+  <tr><td>Public API surface</td><td><span class="tag">PASS</span></td><td>Ten functions plus <code>ALPHA_GRID</code> and <code>MF_INFO</code></td></tr>
+</table>
+<p class="small">
+  Overall: 12 passed, 0 failed, 0 pending. The batch-vs-single PPR cross-check is recorded as an
+  additional PASS in <code>verification.json</code>. Recorded single-run timings on this device:
+  graph build 11 ms, global PageRank 70 ms, one PPR 70 ms, validation sweep 2.0 s, four-method
+  comparison 7.9 s, end-to-end 11.4 s. These are evidence from one WebGL run and are not compared
+  across devices.
+</p>
+
+<h3>4.4 Hand-computed propagation check</h3>
+<p>
+  To check the code against arithmetic rather than only against itself, take the four-node
+  reference graph with <code>p<sub>0</sub> = [0.25, 0.25, 0.25, 0.25]</code> and
+  <code>alpha = 0.85</code>. Before restart, A receives C's mass <code>0.25</code>; B receives half
+  of A's mass, <code>0.125</code>; C receives half of A plus B plus D,
+  <code>0.125 + 0.25 + 0.25 = 0.625</code>; D receives nothing. Adding the uniform restart gives
+  <code>p<sub>1</sub> = 0.85 × [0.25, 0.125, 0.625, 0] + 0.15 × 0.25</code>, i.e.
+  <code>[0.25, 0.14375, 0.56875, 0.0375]</code>.
+</p>
+<p>With the application loaded, this DevTools console call forces one update:</p>
+<pre><code>Array.from(pageRank(0.85, {
+  transition: REFERENCE_GRAPH.transition,
+  maxIter: 1
+}).p)
+// [0.25, 0.14375001192092896, 0.5687500238418579, 0.03750000149011612]</code></pre>
+<p>
+  The code returns the hand-computed vector to float32 precision; the largest coordinate error is
+  <code>2.4e-8</code>. Running to convergence returns
+  <code>[0.37252694, 0.19582376, 0.39414933, 0.03750000]</code> in 28 iterations with residual
+  <code>9.54e-7</code>, within <code>1.6e-7</code> of the supplied reference vector and below the
+  <code>1e-6</code> tolerance. This is the requested hand-computed check: it verifies one
+  propagation step and the fixed point, not the full 861-user evaluation.
+</p>
+
+<h2 class="page-break">5. Retrieval results</h2>
+<p>
+  Recall@10 counts held-out test movies rated <code>&gt;= 4.0</code> that appear in the training
+  candidate pool and pass the test exclusion rule (training and validation ratings removed). A
+  relevant movie is retrieved if it appears in the user's Top-10; the reported value is the macro
+  average over the 861 shared users.
+</p>
+
+<table class="avoid">
+  <tr>
+    <th>Method</th><th class="num">Alpha</th><th class="num">Recall@10</th>
+    <th class="num">Mean list popularity</th><th class="num">Iterations</th><th class="num">Residual</th>
+  </tr>
+  <tr><td>Popularity</td><td class="num">—</td><td class="num">0.0760</td><td class="num">272.0</td><td class="num">—</td><td class="num">—</td></tr>
+  <tr><td>Global PageRank</td><td class="num">0.50</td><td class="num">0.0797</td><td class="num">257.8</td><td class="num">19</td><td class="num">5.47e-7</td></tr>
+  <tr><td><strong>PPR</strong></td><td class="num">0.50</td><td class="num"><strong>0.1122</strong></td><td class="num">244.2</td><td class="num">22</td><td class="num">5.01e-7</td></tr>
+  <tr><td>MF, checkpoint 4</td><td class="num">—</td><td class="num">0.0312</td><td class="num">94.3</td><td class="num">—</td><td class="num">—</td></tr>
+</table>
+
+<p>
+  PPR is 47.6% above popularity and 259.0% above MF in macro Recall@10 on the same users. Global
+  PageRank is only 0.4 percentage points above popularity. That is consistent with a mostly global
+  popularity signal; it was not independently tuned. The same selected alpha (0.50) is used for
+  global PageRank and PPR, as required, so this is not evidence that PageRank was optimized.
+</p>
+
+<h3>4.1 Alpha selection on validation only</h3>
+<table class="avoid">
+  <tr><th class="num">Alpha</th><th class="num">Validation Recall@10</th><th class="num">Validation cohort</th></tr>
+  <tr><td class="num">0.50</td><td class="num"><strong>0.1145</strong></td><td class="num">846</td></tr>
+  <tr><td class="num">0.70</td><td class="num">0.1048</td><td class="num">846</td></tr>
+  <tr><td class="num">0.85</td><td class="num">0.0900</td><td class="num">846</td></tr>
+  <tr><td class="num">0.95</td><td class="num">0.0738</td><td class="num">846</td></tr>
+</table>
+<p>
+  The validation sweep favors the lowest tested alpha, 0.50; larger alpha values did not improve
+  Recall@10 here. Test outcomes were not used to choose alpha. MF and PPR use different validation
+  objectives (RMSE vs Recall@10), so their test recalls are descriptive rather than a controlled
+  test of one algorithm's superiority.
+</p>
+
+<h2>6. Two-user one-factor-at-a-time demonstration</h2>
+<p>
+  Users 1 and 2 stay fixed. Only one factor changes per comparison: seed, or alpha, never both.
+</p>
+
+<table class="avoid">
+  <tr><th>Setting</th><th class="num">User</th><th class="num">Alpha</th><th class="num">Mean list popularity</th><th class="num">Shared with baseline</th></tr>
+  <tr><td>Baseline</td><td class="num">1</td><td class="num">0.85</td><td class="num">245.5</td><td class="num">10/10</td></tr>
+  <tr><td>Change seed only</td><td class="num">2</td><td class="num">0.85</td><td class="num">254.9</td><td class="num">0/10</td></tr>
+  <tr><td>Change alpha only</td><td class="num">1</td><td class="num">0.50</td><td class="num">228.4</td><td class="num">7/10</td></tr>
+</table>
+
+<p>
+  Changing the restart user replaced the whole list; changing alpha from 0.85 to 0.50 retained seven
+  titles. Neither result says which setting is “better” in business terms; it shows that the restart
+  seed and the link-following probability act on different parts of the ranking. The two users' lists
+  also overlap differently by method: 1/10 for popularity, 1/10 for global PageRank, 1/10 for PPR and
+  4/10 for MF.
+</p>
+
+<h3>5.1 Training histories</h3>
+<table class="avoid">
+  <tr><th>User</th><th class="num">Train / val / test</th><th class="num">Positive train</th><th>Top positive-training genres</th></tr>
+  <tr><td>1</td><td class="num">217 / 27 / 28</td><td class="num">131</td><td>Drama 61, Comedy 39, Action 36, Sci-Fi 27, Thriller 25</td></tr>
+  <tr><td>2</td><td class="num">49 / 6 / 7</td><td class="num">32</td><td>Drama 18, Romance 11, Comedy 11, Action 5, Crime 5</td></tr>
+</table>
+<p class="small">
+  User 1's positive history includes <em>Monty Python and the Holy Grail</em>, <em>The Empire Strikes
+  Back</em>, <em>Jean de Florette</em>, <em>Reservoir Dogs</em> and <em>Dead Poets Society</em>.
+  User 2's includes <em>The English Patient</em>, <em>In &amp; Out</em>, <em>The Full Monty</em>,
+  <em>Rosewood</em> and <em>Hoodlum</em>.
+</p>
+
+<h3>5.2 PPR Top-10 at the selected alpha (0.50)</h3>
+<table class="avoid">
+  <tr><th class="num">Rank</th><th>User 1: movie</th><th>Genres</th><th class="num">Pop.</th><th>User 2: movie</th><th>Genres</th><th class="num">Pop.</th></tr>
+  <tr><td class="num">1</td><td>Fargo (1996)</td><td>Crime; Drama; Thriller</td><td class="num">377</td><td>Return of the Jedi (1983)</td><td>Action; Adventure; Romance; Sci-Fi; War</td><td class="num">339</td></tr>
+  <tr><td class="num">2</td><td>Contact (1997)</td><td>Drama; Sci-Fi</td><td class="num">307</td><td>Dead Man Walking (1995)</td><td>Drama</td><td class="num">182</td></tr>
+  <tr><td class="num">3</td><td>The English Patient (1996)</td><td>Drama; Romance; War</td><td class="num">279</td><td>Twelve Monkeys (1995)</td><td>Drama; Sci-Fi</td><td class="num">234</td></tr>
+  <tr><td class="num">4</td><td>Schindler's List (1993)</td><td>Drama; War</td><td class="num">224</td><td>The Rock (1996)</td><td>Action; Adventure; Thriller</td><td class="num">215</td></tr>
+  <tr><td class="num">5</td><td>One Flew Over the Cuckoo's Nest (1975)</td><td>Drama</td><td class="num">202</td><td>The Silence of the Lambs (1991)</td><td>Drama; Thriller</td><td class="num">308</td></tr>
+  <tr><td class="num">6</td><td>Casablanca (1942)</td><td>Drama; Romance; War</td><td class="num">197</td><td>Independence Day (1996)</td><td>Action; Sci-Fi; War</td><td class="num">207</td></tr>
+  <tr><td class="num">7</td><td>Star Trek: First Contact (1996)</td><td>Action; Adventure; Sci-Fi</td><td class="num">189</td><td>Raiders of the Lost Ark (1981)</td><td>Action; Adventure</td><td class="num">312</td></tr>
+  <tr><td class="num">8</td><td>Trainspotting (1996)</td><td>Drama</td><td class="num">164</td><td>Chasing Amy (1997)</td><td>Drama; Romance</td><td class="num">146</td></tr>
+  <tr><td class="num">9</td><td>Sense and Sensibility (1995)</td><td>Drama; Romance</td><td class="num">178</td><td>Trainspotting (1996)</td><td>Drama</td><td class="num">164</td></tr>
+  <tr><td class="num">10</td><td>E.T. the Extra-Terrestrial (1982)</td><td>Children's; Drama; Fantasy; Sci-Fi</td><td class="num">167</td><td>Mr. Holland's Opus (1995)</td><td>Drama</td><td class="num">160</td></tr>
+</table>
+<p class="small">
+  PPR scores for these lists are long-run walk probabilities (user 1 rank 1: 0.000686; user 2 rank 1:
+  0.000697), not ratings or purchase probabilities. Full lists with scores and training popularity
+  are in <code>recommendations.csv</code>.
+</p>
+
+<h3>5.3 MF Top-10 (checkpoint 4)</h3>
+<table class="avoid">
+  <tr><th class="num">Rank</th><th>User 1: movie</th><th>Genres</th><th class="num">Pop.</th><th>User 2: movie</th><th>Genres</th><th class="num">Pop.</th></tr>
+  <tr><td class="num">1</td><td>The Wrong Trousers (1993)</td><td>Animation; Comedy</td><td class="num">90</td><td>Persuasion (1995)</td><td>Romance</td><td class="num">28</td></tr>
+  <tr><td class="num">2</td><td>A Close Shave (1995)</td><td>Animation; Comedy; Thriller</td><td class="num">85</td><td>Casablanca (1942)</td><td>Drama; Romance; War</td><td class="num">197</td></tr>
+  <tr><td class="num">3</td><td>Casablanca (1942)</td><td>Drama; Romance; War</td><td class="num">197</td><td>M*A*S*H (1970)</td><td>Comedy; War</td><td class="num">131</td></tr>
+  <tr><td class="num">4</td><td>Lawrence of Arabia (1962)</td><td>Adventure; War</td><td class="num">134</td><td>Ran (1985)</td><td>Drama; War</td><td class="num">51</td></tr>
+  <tr><td class="num">5</td><td>Pather Panchali (1955)</td><td>Drama</td><td class="num">7</td><td>Three Colors: Red (1994)</td><td>Drama</td><td class="num">56</td></tr>
+  <tr><td class="num">6</td><td>The Maltese Falcon (1941)</td><td>Film-Noir; Mystery</td><td class="num">91</td><td>Pather Panchali (1955)</td><td>Drama</td><td class="num">7</td></tr>
+  <tr><td class="num">7</td><td>When We Were Kings (1996)</td><td>Documentary</td><td class="num">29</td><td>The Third Man (1949)</td><td>Mystery; Thriller</td><td class="num">63</td></tr>
+  <tr><td class="num">8</td><td>Rear Window (1954)</td><td>Mystery; Thriller</td><td class="num">152</td><td>Lawrence of Arabia (1962)</td><td>Adventure; War</td><td class="num">134</td></tr>
+  <tr><td class="num">9</td><td>Aparajito (1956)</td><td>Drama</td><td class="num">4</td><td>The Quiet Man (1952)</td><td>Comedy; Romance</td><td class="num">41</td></tr>
+  <tr><td class="num">10</td><td>One Flew Over the Cuckoo's Nest (1975)</td><td>Drama</td><td class="num">202</td><td>The Maltese Falcon (1941)</td><td>Film-Noir; Mystery</td><td class="num">91</td></tr>
+</table>
+<p class="small">
+  MF scores are predicted ratings on a different scale (for example 5.24 for user 1's first item) and
+  are not comparable to PPR probabilities.
+</p>
+
+<h2 class="page-break">7. Business and algorithmic analysis</h2>
+<h3>Should the platform keep MF, replace it with PPR, or use both?</h3>
+<p>
+  <strong>Use both, in different sections.</strong> PPR should power the primary discovery row because
+  it has the strongest retrieval evidence: Recall@10 0.1122 versus 0.0797 for global PageRank, 0.0760
+  for popularity and 0.0312 for MF on the shared 861-user cohort. It is also genuinely
+  user-conditioned: changing only the restart user replaced all ten baseline titles, while changing
+  only alpha retained seven. MF should remain as a predicted-rating shelf, not as the main discovery
+  row: its retrieval is weaker, but its lists are much less popularity-driven (mean training
+  popularity 94.3 versus 244.2 for PPR) and only 4/10 titles overlap with PPR for the two users.
+</p>
+<p>
+  The proposed sections have distinct purposes. The PPR row is a graph-based discovery surface:
+  “users with your positive history also connect to these movies.” The MF row is a rating-style
+  shelf: “movies the fitted model predicts you would rate highly.” Showing both gives the platform a
+  recall-oriented list and a rating-oriented list without pretending that one score scale is the
+  other. This is a hypothesis supported by offline retrieval and list overlap, not a demonstrated
+  engagement gain.
+</p>
+
+<h3>Online experiment before rollout</h3>
+<p>
+  Run a user-level randomized controlled trial for two weeks with three arms: (A) PPR discovery row
+  only, (B) MF predicted-rating row only, (C) both rows in their proposed sections. Assign each user
+  by a stable hash of user ID to one arm; keep assignment fixed for the experiment so a user does not
+  cross arms, and analyze by intention to treat. This avoids contamination between recommender
+  variants.
+</p>
+<ul>
+  <li><strong>Primary outcome:</strong> 7-day qualified watch-through rate on the recommendation
+    surface (or click-through rate if watch completion is not observable), measured per assigned
+    user, not per impression.</li>
+  <li><strong>Guardrails:</strong> catalog coverage and intra-list diversity; p95 recommendation
+    latency; hide/report/complaint rate; and a minimum popularity floor so the discovery row does not
+    collapse into obscure titles.</li>
+  <li><strong>Decision rule:</strong> ship both only if arm C improves the primary outcome over the
+    better single-row arm without breaching a guardrail. Pre-register the metric definitions and the
+    analysis window before launch; do not choose the winner from a post-hoc subgroup.</li>
+</ul>
+
+<p>
+  Offline Recall@10 cannot establish current-session intent, viewing completion, satisfaction,
+  retention or revenue. It also cannot tell us whether a less popular list is a better discovery
+  experience or simply a worse match. The online experiment, not the offline table, must decide
+  deployment.
+</p>
+
+<h2>8. Limitations and disclosures</h2>
+<ul>
+  <li>The split is chronological within each user, not globally time-consistent. MovieLens records
+    rating times, not viewing sessions.</li>
+  <li>Evaluation is warm-user only; users without positive training edges are excluded, so no
+    cold-start claim is made.</li>
+  <li>The 13 relevant test IDs absent from the training candidate pool cannot be retrieved by any
+    method and are reported rather than hidden.</li>
+  <li>MF and PPR use different validation objectives (RMSE vs Recall@10), so their test recalls are
+    descriptive. The MF L2 correction is disclosed in section 4.2; without it the reference
+    collapsed to the global mean.</li>
+  <li>Popularity is counted from training ratings only and is descriptive, not a platform impression
+    count.</li>
+  <li>Timings come from one headless Chrome/WebGL run on the stated GPU and are not compared across
+    devices.</li>
+  <li>The unmodified AI-session export is an administrative submission step and is not embedded in
+    this report.</li>
+</ul>
+
+<h2>9. Reproducibility</h2>
+<p>
+  From <code>week6/</code>, run <code>py -m http.server 8000</code>, open
+  <code>http://localhost:8000/index.html</code>, then press Build graph, Run tests, Run alpha sweep,
+  Evaluate Recall@10, and Run two-user demo. TensorFlow.js 4.22.0 is loaded from the CDN; D3 7.9.0 is
+  local. The recorded run used Chrome 155.0.8059.85 with the WebGL backend. Exports are
+  <code>verification.json</code>, <code>results.csv</code> and <code>recommendations.csv</code>.
+</p>
+
+<h2>References</h2>
+<div class="refs">
+  <p>Brin, S., and Page, L. 1998. The Anatomy of a Large-Scale Hypertextual Web Search Engine.
+  <em>Computer Networks and ISDN Systems</em> 30, 1–7, 107–117.
+  https://doi.org/10.1016/S0169-7552(98)00110-X</p>
+  <p>Harper, F. M., and Konstan, J. A. 2015. The MovieLens Datasets: History and Context.
+  <em>ACM Transactions on Interactive Intelligent Systems</em> 5, 4, Article 19.
+  https://doi.org/10.1145/2827872</p>
+  <p>Jeh, G., and Widom, J. 2003. Scaling Personalized Web Search.
+  <em>Proceedings of WWW 2003</em>, 271–279. https://doi.org/10.1145/775152.775191</p>
+  <p>Koren, Y., Bell, R., and Volinsky, C. 2009. Matrix Factorization Techniques for Recommender
+  Systems. <em>Computer</em> 42, 8, 30–37. https://doi.org/10.1109/MC.2009.263</p>
+  <p>MovieLens 100K dataset. GroupLens Research, University of Minnesota.
+  https://grouplens.org/datasets/movielens/100k/</p>
+  <p>Rendle, S., Freudenthaler, C., Gantner, Z., and Schmidt-Thieme, L. 2009. BPR: Bayesian
+  Personalized Ranking from Implicit Feedback. <em>Proceedings of UAI 2009</em>, 452–461.
+  https://arxiv.org/abs/1205.2618</p>
+  <p>TensorFlow.js 4.22.0 API documentation. https://js.tensorflow.org/</p>
+</div>
+
+</body>
+</html>
+

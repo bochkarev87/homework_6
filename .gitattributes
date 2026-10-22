@@ -1,0 +1,10 @@
+* text=auto
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.csv text eol=lf
+*.json text eol=lf
+u.data text eol=lf
+u.item text eol=lf
+*.pdf binary
